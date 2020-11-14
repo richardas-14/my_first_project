@@ -83,6 +83,7 @@
 import Vue from 'vue';
 import { Todo, Meta } from 'components/models'
 import { defineComponent, ref, Ref, SetupContext, reactive } from '@vue/composition-api'
+import * as UserModel from '../models/User';
 
 interface Props {}
 
@@ -110,7 +111,7 @@ export default defineComponent({
       isNotRobot: false, password: false
     }) as {[key: string]: boolean};
 
-    function onReg () {
+    async function onReg () {
       for (let errorKey of Object.keys(regFormErros)) {
         regFormErros[errorKey] = false;
       }
@@ -127,8 +128,11 @@ export default defineComponent({
         }
       }
       if (errorsCounts === 0) {
-        alert('Регистрация прошла успешно!');
-        window.location.href = 'https://www.tiktok.com/@kiryshkka/video/6889395846987779330';
+        try {
+          await UserModel.userRegistration(login.value, email.value, password.value);
+          alert('Регистрация прошла успешно!');
+          window.location.href = 'https://www.tiktok.com/@kiryshkka/video/6889395846987779330';
+        } catch (error) {}
       }
     }
 
