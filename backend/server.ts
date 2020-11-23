@@ -5,7 +5,6 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 
 interface User {
-  login: string;
   email: string;
   password: string;
 }
@@ -34,17 +33,36 @@ class Server {
       res.send('hello')
     });
 
+    this.app.post('/api/user/login', async (req: Request, res: Response, next: NextFunction) => {
+      const body = req.body as User;
+      const users = await fs.readJSON(config.usersFilePath) as User[];
+
+      console.log(body)
+
+      for (const user of users) {
+        if (user.email === body.email) {
+          if (user.password === body.password) {
+            return res.status(200).send();
+          } else {
+            return res.status(400).send();
+          }
+        }
+      }
+
+      res.status(400).send();
+    });
+     
     this.app.post('/api/user/reg', async (req: Request, res: Response, next: NextFunction) => {
-      const user = req.body as User;
+      const body = req.body as User;
       const users = await fs.readJSON(config.usersFilePath) as User[];
 
       for (const user of users) {
-        if (user.email === user.email) {
+        if (user.email === body.email) {
           return res.status(409).send();
         }
       }
 
-      users.push(user);
+      users.push(body);
       await fs.writeJSON(config.usersFilePath, users);
 
       return res.status(201).send();

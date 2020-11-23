@@ -31,31 +31,30 @@
         <q-tab-panels v-model="tab">
           <q-tab-panel name="login">
             <q-form @submit="onLogin">
-              <q-input filled v-model="login" label="Имя пользователя"
+              {{ formLogin.email }}
+              <q-input filled v-model="formLogin.email" label="E-mail"
                 lazy-rules
-                :rules="[ () => login && login.length > 0 || 'Укажите имя пользователя' ]"
+                :rules="[ (val) => val && val.length > 0 || 'Укажите e-mail' ]"
                 :error="loginHasError"
               >
                 <template v-slot:error>
                   <div>Пароль не правильный, либо такого пользователя не существует</div>
                 </template>
               </q-input>
-              <q-input filled class="q-mt-md" v-model="password" label="Пароль" title="Введите пароль" type="password"
+              <q-input filled class="q-mt-md" v-model="formLogin.password" label="Пароль" title="Введите пароль" type="password"
                 lazy-rules
-                :rules="[ val => login && login.length > 0 || 'Не может быть пустым']"
+                :rules="[ val => val && val.length > 0 || 'Не может быть пустым']"
               />
               <q-btn type="submit" color="white" class="full-width q-mt-md" text-color="black" label="Вход" />
             </q-form>
           </q-tab-panel>
           <q-tab-panel name="reg">
             <q-form @submit="onReg">
-              <q-input filled v-model="login" label="Имя пользователя"
-                :rules="[ val => login && login.length > 0 || 'Не может быть пустым']"
-              />
-              <q-input filled class="q-mt-md" v-model="email" label="Эл.почта" title="Эл.почта"
+              
+              <q-input filled class="q-mt-md" v-model="formRegistration.email" label="E-mail" title="E-mail"
                 :rules="[ val => val && val.length > 0 || 'Не может быть пустым']"
               />
-              <q-input filled class="q-mt-md" v-model="password" label="Пароль" title="Пароль" type="password"
+              <q-input filled class="q-mt-md" v-model="formRegistration.password" label="Пароль" title="Пароль" type="password"
                 :rules="[ val => val && val.length > 0 || 'Не может быть пустым']"
                 :error="regFormErros.password"
               >
@@ -63,7 +62,7 @@
                   <div>Пароли должны совпадать</div>
                 </template>
               </q-input>
-              <q-input filled class="q-mt-md" v-model="passwordConfirm" label="Повторите пароль" title="Повторите пароль" type="password"
+              <q-input filled class="q-mt-md" v-model="formRegistration.passwordConfirm" label="Повторите пароль" title="Повторите пароль" type="password"
                 :rules="[ val => val && val.length > 0 || 'Не может быть пустым']"
               />
               <q-checkbox v-model="isNotRobot" label="Я не робот"
@@ -81,7 +80,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { Todo, Meta } from 'components/models'
+import { Todo, Meta } from '../components/models'
 import { defineComponent, ref, Ref, SetupContext, reactive } from '@vue/composition-api'
 import * as UserModel from '../models/User';
 
@@ -91,18 +90,27 @@ export default defineComponent({
   name: 'LoginPage',
   setup (props: Props, ctx: SetupContext) {
     const tab = ref('login');
-    const login = ref('');
-    const password = ref('');
-    const passwordConfirm = ref('');
-    const email = ref('');
     const isNotRobot = ref(false);
+
+    const formLogin = reactive({
+      email: '', 
+      password: ''
+    });
+    
+    const formRegistration = reactive({
+      email: '', 
+      password: '',
+      passwordConfirm: ''
+    });
 
     const loginHasError = ref(false);
 
-    function onLogin () {
-      if (login.value === 'test' && password.value === '123') {
-        ctx.root.$router.push({ path: '/' });
-      } else {
+    async function onLogin () {
+      loginHasError.value = false;
+      try {
+        await UserModel.userLogin(formLogin.email, formLogin.password);
+        alert('Вход в личный кабинет');
+      } catch (error) {
         loginHasError.value = true;
       }
     }
@@ -118,7 +126,8 @@ export default defineComponent({
       if (!isNotRobot.value) {
         regFormErros.isNotRobot = true;
       }
-      if (password.value !== passwordConfirm.value) {
+      console.log(formRegistration)
+      if (formRegistration.password !== formRegistration.passwordConfirm) {
         regFormErros.password = true;
       }
       let errorsCounts = 0;
@@ -129,14 +138,13 @@ export default defineComponent({
       }
       if (errorsCounts === 0) {
         try {
-          await UserModel.userRegistration(login.value, email.value, password.value);
+          await UserModel.userRegistration(formRegistration.email, formRegistration.password);
           alert('Регистрация прошла успешно!');
-          window.location.href = 'https://www.tiktok.com/@kiryshkka/video/6889395846987779330';
         } catch (error) {}
       }
     }
 
-    return { login, tab, password, passwordConfirm, email, isNotRobot, onLogin, loginHasError, onReg, regFormErros };
+    return {tab, formLogin, formRegistration, isNotRobot, onLogin, loginHasError, onReg, regFormErros };
   }
 })
 </script>

@@ -1,8 +1,14 @@
 import axios from 'axios';
 
-export function userRegistration (login: string, email: string, password: string) {
+export function userLogin (email: string, password: string) {
+  return axios.post('/api/user/login', {
+    email,
+    password
+  });
+}
+
+export function userRegistration (email: string, password: string) {
   return axios.post('/api/user/reg', {
-    login,
     email,
     password
   });
